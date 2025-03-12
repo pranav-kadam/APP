@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video & Audio Merger</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --success: #28a745;
+            --text: #333;
+            --text-light: #666;
+            --bg-light: #f8f9fa;
+            --bg-dark: #e9ecef;
+            --border: #dee2e6;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg-light);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px var(--shadow);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin-top: 10px;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .media-section {
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .media-section:hover {
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .media-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .media-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 20px;
+        }
+        
+        .media-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            width: 100%;
+            border: 2px dashed var(--border);
+            border-radius: 6px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--bg-light);
+        }
+        
+        .file-input:hover {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .file-input p {
+            margin: 10px 0 0;
+            color: var(--text-light);
+        }
+        
+        .file-input input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .preview-container {
+            margin-top: 15px;
+            display: none;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000;
+        }
+        
+        .preview-container.audio {
+            background-color: var(--bg-dark);
+            padding: 15px;
+        }
+        
+        video, audio {
+            width: 100%;
+            display: block;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        .file-info span {
+            margin-right: 15px;
+        }
+        
+        .action-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.2);
+        }
+        
+        button:disabled {
+            background: #aaa;
+            color: white;
+            cursor: not-allowed;
+        }
+        
+        .button-icon {
+            margin-right: 10px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background: #ddd;
+            margin-top: 25px;
+            border-radius: 20px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 0%;
+            height: 10px;
+            background: var(--success);
+            border-radius: 20px;
+            transition: width 0.3s;
+        }
+        
+        .loading-text {
+            margin-top: 15px;
+            display: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Video & Audio Merger</h1>
+            <p>Combine your video and audio files into a single multimedia file</p>
+        </div>
+        
+        <div class="content">
+            <!-- Keep original form attributes -->
+            <form action="/" method="post" enctype="multipart/form-data" id="mergeForm">
+                <div class="media-section" id="videoSection">
+                    <div class="media-header">
+                        <div class="media-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="media-title">Upload Video</div>
+                    </div>
+                    
+                    <div class="file-input-wrapper">
+                        <div class="file-input" id="videoDropZone">
+                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                            <p>Drag & drop your video file here or click to browse</p>
+                            <p class="small">Supported formats: MP4, WebM, MOV</p>
+                            <!-- Maintaining original input name -->
+                            <input type="file" name="video" id="videoInput" accept="video/*" required>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-container" id="videoPreviewContainer">
+                        <!-- Maintaining original video ID -->
+                        <video id="videoPreview" controls></video>
+                        <div class="file-info" id="videoFileInfo"></div>
+                    </div>
+                </div>
+                
+                <div class="media-section" id="audioSection">
+                    <div class="media-header">
+                        <div class="media-icon">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <div class="media-title">Upload Audio</div>
+                    </div>
+                    
+                    <div class="file-input-wrapper">
+                        <div class="file-input" id="audioDropZone">
+                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                            <p>Drag & drop your audio file here or click to browse</p>
+                            <p class="small">Supported formats: MP3, WAV, AAC</p>
+                            <!-- Maintaining original input name -->
+                            <input type="file" name="audio" id="audioInput" accept="audio/*" required>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-container audio" id="audioPreviewContainer">
+                        <!-- Maintaining original audio ID -->
+                        <audio id="audioPreview" controls></audio>
+                        <div class="file-info" id="audioFileInfo"></div>
+                    </div>
+                </div>
+                
+                <div class="action-section">
+                    <!-- Maintaining original button ID -->
+                    <button type="submit" id="mergeButton">
+                        <i class="fas fa-magic button-icon"></i>
+                        Merge
+                    </button>
+                    
+                    <!-- Maintaining original progress container class -->
+                    <div class="progress-container">
+                        <!-- Maintaining original progress bar ID -->
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    
+                    <!-- Maintaining original loading text ID and class -->
+                    <div class="loading-text" id="loadingText">Merging in progress...</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Maintaining all original element references
+            const videoInput = document.getElementById('videoInput');
+            const audioInput = document.getElementById('audioInput');
+            const videoPreview = document.getElementById('videoPreview');
+            const audioPreview = document.getElementById('audioPreview');
+            const videoPreviewContainer = document.getElementById('videoPreviewContainer');
+            const audioPreviewContainer = document.getElementById('audioPreviewContainer');
+            const videoFileInfo = document.getElementById('videoFileInfo');
+            const audioFileInfo = document.getElementById('audioFileInfo');
+            const mergeButton = document.getElementById('mergeButton');
+            const progressBar = document.getElementById('progressBar');
+            const progressContainer = document.querySelector('.progress-container');
+            const loadingText = document.getElementById('loadingText');
+            const videoDropZone = document.getElementById('videoDropZone');
+            const audioDropZone = document.getElementById('audioDropZone');
+            
+            // Function to format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Function to display file info
+            function displayFileInfo(file, infoElement) {
+                if (file) {
+                    const fileSize = formatFileSize(file.size);
+                    const fileName = file.name;
+                    
+                    infoElement.innerHTML = `
+                        <span><i class="fas fa-file"></i> ${fileName}</span>
+                        <span><i class="fas fa-weight-hanging"></i> ${fileSize}</span>
+                    `;
+                }
+            }
+            
+            // Function to check if both files are uploaded
+            function checkFilesUploaded() {
+                if (videoInput.files.length > 0 && audioInput.files.length > 0) {
+                    mergeButton.disabled = false;
+                } else {
+                    mergeButton.disabled = true;
+                }
+            }
+            
+            // Video input change event - preserving original functionality
+            videoInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    videoPreview.src = URL.createObjectURL(file);
+                    videoPreviewContainer.style.display = 'block';
+                    displayFileInfo(file, videoFileInfo);
+                    checkFilesUploaded();
+                }
+            });
+            
+            // Audio input change event - preserving original functionality
+            audioInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    audioPreview.src = URL.createObjectURL(file);
+                    audioPreviewContainer.style.display = 'block';
+                    displayFileInfo(file, audioFileInfo);
+                    checkFilesUploaded();
+                }
+            });
+            
+            // Drag and drop for video
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                videoDropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                videoDropZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                videoDropZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight(e) {
+                videoDropZone.style.borderColor = 'var(--primary)';
+                videoDropZone.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
+            }
+            
+            function unhighlight(e) {
+                videoDropZone.style.borderColor = 'var(--border)';
+                videoDropZone.style.backgroundColor = 'var(--bg-light)';
+            }
+            
+            videoDropZone.addEventListener('drop', handleVideoDrop, false);
+            
+            function handleVideoDrop(e) {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                
+                if (file && file.type.startsWith('video/')) {
+                    videoInput.files = dt.files;
+                    videoPreview.src = URL.createObjectURL(file);
+                    videoPreviewContainer.style.display = 'block';
+                    displayFileInfo(file, videoFileInfo);
+                    checkFilesUploaded();
+                }
+            }
+            
+            // Drag and drop for audio
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                audioDropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                audioDropZone.addEventListener(eventName, highlightAudio, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                audioDropZone.addEventListener(eventName, unhighlightAudio, false);
+            });
+            
+            function highlightAudio(e) {
+                audioDropZone.style.borderColor = 'var(--primary)';
+                audioDropZone.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
+            }
+            
+            function unhighlightAudio(e) {
+                audioDropZone.style.borderColor = 'var(--border)';
+                audioDropZone.style.backgroundColor = 'var(--bg-light)';
+            }
+            
+            audioDropZone.addEventListener('drop', handleAudioDrop, false);
+            
+            function handleAudioDrop(e) {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                
+                if (file && file.type.startsWith('audio/')) {
+                    audioInput.files = dt.files;
+                    audioPreview.src = URL.createObjectURL(file);
+                    audioPreviewContainer.style.display = 'block';
+                    displayFileInfo(file, audioFileInfo);
+                    checkFilesUploaded();
+                }
+            }
+            
+            // Form submission - Preserving original server submission logic
+            document.getElementById('mergeForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                mergeButton.disabled = true;
+                progressContainer.style.display = 'block';
+                loadingText.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                // Keep the original progress behavior
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progressBar.style.width = progress + "%";
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            document.getElementById("mergeForm").submit(); // Original server submission
+                        }, 500);
+                    }
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>
